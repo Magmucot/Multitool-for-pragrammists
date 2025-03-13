@@ -37,11 +37,11 @@
 2. Установите необходимые зависимости:
 
    ```bash
-   pip install PyQt5```
+   pip install PyQt5
 Склонируйте репозиторий:
 
 
-```git clone https://github.com/ваш-username/ваш-репозиторий.git```
+```git clone https://github.com/ваш-username/ваш-репозиторий.git
 Перейдите в директорию проекта:
 
 
