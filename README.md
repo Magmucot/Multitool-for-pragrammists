@@ -42,8 +42,3 @@
 ```
 git clone https://github.com/Magmucot/Multitul-for-pragrammists.git
 cd Multitul
-
-
-Запустите приложение: python main.py
-
-
