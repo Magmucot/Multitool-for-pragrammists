@@ -38,12 +38,11 @@
 
    ```
    pip install PyQt5
-Склонируйте репозиторий:
-git clone https://github.com/DarkPyDoor/DDoS-Control-Panel.git
+## Склонируйте репозиторий:
 ```git clone https://github.com/Magmucot/Multitul-for-pragrammists.git
-   cd Multitul
+   cd Multitul```
 
-cd ваш-репозиторий
+
 Запустите приложение: python main.py
 
 
