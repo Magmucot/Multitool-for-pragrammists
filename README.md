@@ -41,7 +41,7 @@
 Склонируйте репозиторий:
 
 
-```git clone https://github.com/ваш-username/ваш-репозиторий.git
+```git clone https://github.com/Magmucot/Multitul-for-pragrammists.git
 Перейдите в директорию проекта:
 
 
