@@ -39,6 +39,10 @@
    ```
    pip install PyQt5
 ## Склонируйте репозиторий:
-```
-git clone https://github.com/Magmucot/Multitul-for-pragrammists.git
-cd Multitul
+   ```
+   git clone https://github.com/Magmucot/Multitul-for-pragrammists.git
+   cd Multitul
+
+## Запустите приложение:
+   python main.py
+
