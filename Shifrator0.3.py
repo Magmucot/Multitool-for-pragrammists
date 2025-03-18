@@ -1,12 +1,11 @@
-from PyQt5.QtWidgets import *
-
+from PySide6.QtWidgets import *
 
 def deshifrv(tekst, key, alfavit):
     result = ''
     for i, k in enumerate(tekst):
         ind = alfavit.index(k)
         ind_cur = alfavit.index(key[i % len(key)])
-        y = alfavit[(ind - ind_cur) % 44]
+        y = alfavit[(ind - ind_cur) % len(alfavit)]
         result += y
     return result
 
@@ -16,30 +15,32 @@ def shifrv(tekst, key, alfavit):
     for i, h in enumerate(tekst):
         ind = alfavit.index(h)
         key_ind = alfavit.index(key[i % len(key)])
-        y = alfavit[(ind + key_ind) % 44]
+        y = alfavit[(ind + key_ind) % len(alfavit)]
         result += y
     return result
 
 
 def deshifrc(tekst, key, alfavit):
     result = ''
-    for i, k in enumerate(tekst):
+    for k in tekst:
         cur = alfavit.index(k)
-        y = alfavit[(cur - key) % 44]
+        y = alfavit[(cur - key) % len(alfavit)]
         result += y
     return result
 
 
 def shifrc(tekst, key, alfavit):
+    
     result = ''
-    for i, h in enumerate(tekst):
+    for h in tekst:
         ind = alfavit.index(h)
-        y = alfavit[(ind + key) % 44]
+        y = alfavit[(ind + key) % len(alfavit)]
         result += y
     return result
 
 
 def opred(text, stor, tip, key):
+    res = 'Ошибка'
     alfavit = ['e', 'u', 'Z', 'з', '9', '-', '^', 'Е', 'S', '"', 'Б', 'В', 'v', 'ю', 'М', 'q', 'P', 'j', ')', 'r', ']',
                '|', '3', '.', 'ш', 'V', 'К', 'h', 'i', 'z', 'N', 'X', 'Л', 'д', '0', 'y', 'ч', 'ф', 'M', 'А', 'ж', '╕',
                'Р', 'И', '?', 'У', 'Ч', '/', 'p', '4', 'n', 'w', '&', "'", 'З', 'Ь', 'э', 'a', 'I', 'я', 'Ж', 'Ы', '#',
@@ -50,15 +51,15 @@ def opred(text, stor, tip, key):
                'ь', '*', 'Й', 'Н', 'A', 'G', 'Y', '\\', 'п', 'Х', 'л']
     if stor == 'Дешифровать':
         if tip == 'Цезарь':
-            result = deshifrc(text, int(key), alfavit)
-        else:
-            result = deshifrv(text, key, alfavit)
-    else:
+            res = deshifrc(text, int(key), alfavit)
+        if tip == 'Виженер':
+            res = deshifrv(text, key, alfavit)
+    if stor == 'Шифровать':
         if tip == 'Цезарь':
-            result = shifrc(text, int(key), alfavit)
-        else:
-            result = shifrv(text, key, alfavit)
-    return result
+            res = shifrc(text, int(key), alfavit)
+        if tip == 'Виженер':
+            res = shifrv(text, key, alfavit)
+    return res
 
 
 app = QApplication([])
@@ -72,17 +73,17 @@ input_text.setPlaceholderText('Введите текст')
 
 input_deystv = QLabel('Выберите действие (шифровка или дешифровка):')
 
-combo_tip = QComboBox(window)
-combo_tip.addItem('Шифровать')
-combo_tip.addItem('Дешифровать')
+combo_deystv = QComboBox(window)
+combo_deystv.addItem('Шифровать')
+combo_deystv.addItem('Дешифровать')
 
 input_key = QLineEdit()
 input_key.setPlaceholderText('Введите ключ')
 
 input_tip = QLabel('Выберите шифр (Цезарь или Виженер):')
-combo_deystv = QComboBox(window)
-combo_deystv.addItem('Цезарь')
-combo_deystv.addItem('Виженер')
+combo_tip = QComboBox(window)
+combo_tip.addItem('Цезарь')
+combo_tip.addItem('Виженер')
 
 btn = QPushButton('Выполнить')
 
