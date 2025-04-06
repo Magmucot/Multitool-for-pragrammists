@@ -40,7 +40,7 @@
 2. **Установите необходимые зависимости:**
 
    ```
-   pip install PyQt5
+   pip install PySide6
 3. **Склонируйте репозиторий:**
    ```
    git clone https://github.com/Magmucot/Multitul-for-pragrammists.git
