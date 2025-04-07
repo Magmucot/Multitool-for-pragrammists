@@ -44,7 +44,7 @@ class MainWindow(QMainWindow):
         self.btn_shifr.setStyleSheet(
             """QPushButton {border-radius: 2px; border: none;}"""
         )
-        icon = QIcon("Py_apps/fingerprint.png")
+        icon = QIcon("Multitool/fingerprint.png")
         self.btn_shifr.setIcon(icon)
         self.btn_shifr.setFixedSize(40, 40)
         self.up_layout.addWidget(self.btn_shifr)
