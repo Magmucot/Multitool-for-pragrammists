@@ -1,22 +1,14 @@
 import sys
-import os
 from PySide6.QtWidgets import (
-    QApplication,
-    QMainWindow,
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QPushButton,
-    QTextEdit,
-    QComboBox,
-    QLabel,
-    QLineEdit,
-    QStackedWidget,
-    QScrollArea,
-    QMessageBox,
-    QFrame,
-)
-from PySide6.QtCore import Qt
+    QApplication, QMainWindow,
+    QWidget, QVBoxLayout,
+    QHBoxLayout, QPushButton,
+    QTextEdit, QComboBox,
+    QLabel, QLineEdit,
+    QStackedWidget, QScrollArea,
+    QMessageBox, QFrame)
+
+# from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
 
 from OOP1 import Shifrator
@@ -52,7 +44,8 @@ class MainWindow(QMainWindow):
         self.btn_shifr.setStyleSheet(
             """QPushButton {border-radius: 2px; border: none;}"""
         )
-        self.btn_shifr.setIcon(QIcon.fromTheme("document-encrypt"))
+        icon = QIcon("Py_apps/fingerprint.png")
+        self.btn_shifr.setIcon(icon)
         self.btn_shifr.setFixedSize(40, 40)
         self.up_layout.addWidget(self.btn_shifr)
 
@@ -352,7 +345,6 @@ class MainWindow(QMainWindow):
 
 
 if __name__ == "__main__":
-    os.environ["QT_QPA_PLATFORM"] = "xcb"
     app = QApplication(sys.argv)
     app.setStyle("Fusion")
     window = MainWindow()
