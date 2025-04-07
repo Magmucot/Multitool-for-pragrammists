@@ -216,7 +216,6 @@ class MainWindow(QMainWindow):
             return
 
         transf = Transformator()
-        # Предполагается, что если sp_osn2 содержит одно число, оно применяется ко всем
         if len(sp_osn2) == 1:
             sp_osn2 = sp_osn2 * len(nums)
         result = transf.transform(nums, sp_osn1, sp_osn2)
@@ -330,7 +329,6 @@ class MainWindow(QMainWindow):
                 max_digit = max(int(d, 36) if d.isalnum() else 0 for d in numb2)
                 base2 = max(max_digit + 1, 2)
 
-            # Преобразование чисел в десятичную систему
             num1 = int(numb1, base1)
             num2 = int(numb2, base2)
 
@@ -346,7 +344,6 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "Ошибка!", "Деление на ноль!")
             return
 
-        # Выполнение операции
         oper = {"×": "*", "+": "+", "-": "-", "÷": "/"}
         math = Transformator()
         result = math.math_oper(num1, 10, oper[operation], num2, 10)
