@@ -52,7 +52,7 @@ class MainWindow(QMainWindow):
             """QPushButton {border-radius: 2px; border: none;}"""
         )
         icon = QIcon(":/icons/fingerprint.png")
-        icon1 = QIcon(':/icons/123.png')
+        icon1 = QIcon(':/icons/binary.png')
         self.btn_shifr.setIcon(icon)
         self.btn_shifr.setIconSize(QSize(32, 32))
         self.btn_shifr.setFixedSize(40, 40)
@@ -137,7 +137,8 @@ class MainWindow(QMainWindow):
         text = self.input_text.toPlainText()
         key = self.input_key.text()
         if not text or not stor or not tip or not key:
-            QMessageBox.warning(self, "Ошибка!", "Ошибка!\nЗаполните все поля!")
+            QMessageBox.warning(
+                self, "Ошибка!", "Ошибка!\nЗаполните все поля!")
             return
         if tip == "Цезарь" and not key.isdigit():
             QMessageBox.warning(
@@ -155,7 +156,8 @@ class MainWindow(QMainWindow):
             list(map(int, self.input_osn2.text().split())),
         )
         if not nums or not sp_osn1 or not sp_osn2:
-            QMessageBox.warning(self, "Ошибка!", "Ошибка!\nЗаполните все поля!")
+            QMessageBox.warning(
+                self, "Ошибка!", "Ошибка!\nЗаполните все поля!")
             return
         if (
             len(sp_osn1) != len(sp_osn2)
@@ -186,7 +188,8 @@ class MainWindow(QMainWindow):
         sp_osn2 = self.input_osn2.text().split()
 
         if not nums or not sp_osn1 or not sp_osn2:
-            QMessageBox.warning(self, "Ошибка!", "Ошибка!\nЗаполните все поля!")
+            QMessageBox.warning(
+                self, "Ошибка!", "Ошибка!\nЗаполните все поля!")
             return
 
         try:
@@ -311,7 +314,8 @@ class MainWindow(QMainWindow):
             base2 = int(base2_str) if base2_str else None
             res_base = int(res_base_str) if res_base_str else 10
         except ValueError:
-            QMessageBox.warning(self, "Ошибка!", "Основания должны быть числами!")
+            QMessageBox.warning(
+                self, "Ошибка!", "Основания должны быть числами!")
             return
 
         if (
@@ -326,10 +330,12 @@ class MainWindow(QMainWindow):
 
         try:
             if not base1:
-                max_digit = max(int(d, 36) if d.isalnum() else 0 for d in numb1)
+                max_digit = max(int(d, 36) if d.isalnum()
+                                else 0 for d in numb1)
                 base1 = max(max_digit + 1, 2)
             if not base2:
-                max_digit = max(int(d, 36) if d.isalnum() else 0 for d in numb2)
+                max_digit = max(int(d, 36) if d.isalnum()
+                                else 0 for d in numb2)
                 base2 = max(max_digit + 1, 2)
 
             num1 = int(numb1, base1)
