@@ -1,16 +1,23 @@
 import sys
 from PySide6.QtWidgets import (
-    QApplication, QMainWindow,
-    QWidget, QVBoxLayout,
-    QHBoxLayout, QPushButton,
-    QTextEdit, QComboBox,
-    QLabel, QLineEdit,
-    QStackedWidget, QScrollArea,
-    QMessageBox, QFrame)
-
-# from PySide6.QtCore import Qt
+    QApplication,
+    QMainWindow,
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QPushButton,
+    QTextEdit,
+    QComboBox,
+    QLabel,
+    QLineEdit,
+    QStackedWidget,
+    QScrollArea,
+    QMessageBox,
+    QFrame,
+)
 from PySide6.QtGui import QIcon
-
+from PySide6.QtCore import QSize
+import resources
 from OOP1 import Shifrator
 from OOP2 import Transformator
 
@@ -44,12 +51,15 @@ class MainWindow(QMainWindow):
         self.btn_shifr.setStyleSheet(
             """QPushButton {border-radius: 2px; border: none;}"""
         )
-        icon = QIcon("Multitool/fingerprint.png")
+        icon = QIcon(":/icons/fingerprint.png")
+        icon1 = QIcon(':/icons/123.png')
         self.btn_shifr.setIcon(icon)
+        self.btn_shifr.setIconSize(QSize(32, 32))
         self.btn_shifr.setFixedSize(40, 40)
         self.up_layout.addWidget(self.btn_shifr)
 
-        self.btn_transf = QPushButton("1011")
+        self.btn_transf = QPushButton()
+        icon1 = QIcon(':/icons/123.png')
         self.btn_transf.setFixedSize(40, 40)
         self.up_layout.addWidget(self.btn_transf)
         self.up_layout.addStretch()
