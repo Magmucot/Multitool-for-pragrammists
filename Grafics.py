@@ -59,7 +59,7 @@ class MainWindow(QMainWindow):
         self.up_layout.addWidget(self.btn_shifr)
 
         self.btn_transf = QPushButton()
-        icon1 = QIcon(':/icons/123.png')
+        self.btn_transf.setIcon(icon1)
         self.btn_transf.setFixedSize(40, 40)
         self.up_layout.addWidget(self.btn_transf)
         self.up_layout.addStretch()
