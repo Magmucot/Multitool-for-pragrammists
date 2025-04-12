@@ -1,4 +1,4 @@
-from math import cos, sin, tan, radians, exp, e, sqrt, factorial, cosh, log
+from math import cos, sin, tan, radians, exp, e, sqrt, factorial, cosh, log, pi, fabs, acos, acosh, asin, atan
 from scipy.integrate import nquad
 from operator import abs as abs_op
 import re
@@ -12,6 +12,10 @@ class Calculator:
     def diff_math_function(self, s):
         s = s.strip()
         opers = {
+            'arccos':acos,
+            "arccosh": acosh,
+            "arcsin": asin,
+            "arctan": atan,
             "|": abs_op,
             "cosh": cosh,
             "cos": cos,
@@ -25,9 +29,22 @@ class Calculator:
         if s.endswith("!"):
             oper, num = s[-1], s[:-1]
             num = self.easy_math(num)
+        elif s.startswith("|") and s.endswith("|"):
+                inner_expr = s[1:-1]
+                inner_res = self.combined_calc(inner_expr)
+                num = float(inner_res)
+                return fabs(num)
         elif s.startswith("√"):
-            oper, num = s[0], s[1:]
-            num = self.easy_math(num)
+                num_str = s[1:]
+                if num_str == "pi":
+                    num = pi
+                elif num_str == "e":
+                    num = e
+                else:
+                    num = float(num_str)
+                if num < 0:
+                    raise ValueError("Корень из отрицательного числа")
+                return sqrt(num)
         elif s.startswith("∫"):
             oper = "∫"
             parts = s[1:].split(", ")
@@ -43,45 +60,44 @@ class Calculator:
             }
             result = opers[oper](func_map[func_str], [(a, b)])[0]
             return round(result, 12)
-        else:
-            if s.startswith("|") and s.endswith("|"):
+        elif s.startswith("|") and s.endswith("|"):
                 oper, num = "|", s[1:-1]
-            else:
-                parts = s.split("(", 1)
-                if len(parts) == 2 and parts[0] in opers and parts[1].endswith(")"):
-                    oper, num = parts[0], parts[1][:-1]
-                else:
-                    oper, num = "|", s
-            num = self.easy_math(num)
+        elif '(' in s:
+            if s.endswith(')'):
+                s = s[:-1]
+            oper, num = s.split('(')
+        else:
+            return self.easy_math(s)
 
         num = float(num)
         if int(num) == num:
             num = int(num)
 
-        if oper in ["cos", "sin", "tan"]:
+        if oper in ["cos", "sin", "tan", 'arccos', "arccosh", "arcsin", "arctan"]:
             num = radians(num)
         res = opers[oper](num)
         return round(res, 12)
 
     def easy_math(self, s):
-        s = s.replace("−", "-").replace("×", "*")
+        s = s.replace("^", "**").replace("×", "*").replace("÷", '/').replace("−", "-")
         if not s:
             raise ValueError("Пустая строка в easy_math")
         return eval(s)
 
     def combined_calc(self, s):
         try:
-            s = s.replace(" ", "").replace("^", "**")
-            pat = r"""(√(?:\d+(?:\.\d+)?|pi|e))
-            |((?:\d+(?:\.\d+)?|pi|e)!)
+            s = s.replace(" ", "")
+            pat = r"""(√(?:-?\d*\.?\d+|pi|e))
+            |(\|[^|]+\|)
+            |((?:-?\d*\.?\d+|pi|e)!)
             |(∫[a-z]+,(?:\d+(?:\.\d+)?|pi|e),(?:\d+(?:\.\d+)?|pi|e))
-            |([a-z]{3})\((?:\d+(?:\.\d+)?|pi|e|\d+[-+*/]\d+)\)
-            |(log)\((?:\d+(?:\.\d+)?|pi|e|\d+[-+*/**]\d+)(?:,(?:\d+(?:\.\d+)?|pi|e))?\)"""
-            while re.search(pat, s):
-                match = re.search(pat, s)
+            |((?:arc)?[a-z]{3})\((-?\d*\.?\d+|pi|e|-?\d+[-+*/]\d+)\)
+            |(log)\((?:-?\d*\.?\d+|pi|e|-?\d+[-+*/**]\d+)(?:,-?\d*\.?\d+)?\)"""
+            while re.search(pat, s, re.VERBOSE):
+                match = re.search(pat, s, re.VERBOSE)
                 part = match.group(0)
-                if match.group(4):
-                    func, inr = match.group(4), match.group(5)
+                if match.group(5):
+                    func, inr = match.group(5), match.group(6)
                     inner_res = self.easy_math(inr)
                     res = self.diff_math_function(f"{func}({inner_res})")
                 else:
@@ -93,5 +109,3 @@ class Calculator:
             return self.easy_math(s)
         except Exception as e:
             return f"Ошибка: {e}"
-calc = Calculator()
-print(str(calc.combined_calc('log(10)')))
