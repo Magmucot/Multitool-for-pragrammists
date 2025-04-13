@@ -73,11 +73,15 @@ class Calculator:
         if int(num) == num:
             num = int(num)
 
-        if oper in ["cos", "sin", "tan", 'arccos', "arccosh", "arcsin", "arctan"]:
+        if oper in ["cos", "sin", "tan", 'arccos', "arccosh", "arcsin", "arctan", 'ctg']:
             num = radians(num)
-        res = opers[oper](num)
-        return round(res, 12)
 
+        if oper == 'ctg':
+            return cos(num) / sin(num)
+        res = opers[oper](num)
+
+
+        return round(res, 12)
     def easy_math(self, s):
         s = s.replace("^", "**").replace("×", "*").replace("÷", '/').replace("−", "-")
         if not s:
@@ -109,3 +113,5 @@ class Calculator:
             return self.easy_math(s)
         except Exception as e:
             return f"Ошибка: {e}"
+
+calc = Calculator()
