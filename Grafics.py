@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
     QMessageBox, QFrame,
     QGridLayout, QSizePolicy,
 )
+from scipy.integrate import nquad
 from PySide6.QtGui import QIcon, QCursor, QAction, QKeySequence
 from PySide6.QtCore import QSize, Qt,  QEvent
 import resources  # noqa: F401
@@ -716,11 +717,11 @@ class MainWindow(QMainWindow):
         self.btn_bracer.clicked.connect(lambda: self.add_to_expression(")"))
         self.btn_level.clicked.connect(lambda: self.add_to_expression("^"))
         self.btn_fact.clicked.connect(lambda: self.add_to_expression("!"))
-        self.btn_log.clicked.connect(lambda: self.add_to_expression("log()"))
-        self.btn_sin.clicked.connect(lambda: self.add_to_expression("sin()"))
-        self.btn_cos.clicked.connect(lambda: self.add_to_expression("cos()"))
-        self.btn_tan.clicked.connect(lambda: self.add_to_expression("tan()"))
-        self.btn_ctg.clicked.connect(lambda: self.add_to_expression("ctg()"))
+        self.btn_log.clicked.connect(lambda: self.add_to_expression("log("))
+        self.btn_sin.clicked.connect(lambda: self.add_to_expression("sin("))
+        self.btn_cos.clicked.connect(lambda: self.add_to_expression("cos("))
+        self.btn_tan.clicked.connect(lambda: self.add_to_expression("tan("))
+        self.btn_ctg.clicked.connect(lambda: self.add_to_expression("ctg("))
         self.btn_arc.clicked.connect(lambda: self.add_to_expression("arc"))
         self.btn_ans.clicked.connect(lambda: self.add_to_expression(" Ans "))
         self.btn_mod.clicked.connect(lambda: self.add_to_expression("||"))
@@ -731,7 +732,7 @@ class MainWindow(QMainWindow):
         self.btn_div_c.clicked.connect(lambda: self.add_to_expression("//"))
         self.btn_mul.clicked.connect(lambda: self.add_to_expression("×"))
         self.btn_root.clicked.connect(lambda: self.add_to_expression("√"))
-        self.btn_integr.clicked.connect(lambda: self.add_to_expression("∫()"))
+        self.btn_integr.clicked.connect(lambda: self.add_to_expression("∫("))
         self.btn_e.clicked.connect(lambda: self.add_to_expression("e"))
         self.btn_pi.clicked.connect(lambda: self.add_to_expression("π"))
 
@@ -739,8 +740,8 @@ class MainWindow(QMainWindow):
         self.btn_backspace.clicked.connect(self.backspace)
         self.btn_C.clicked.connect(self.clear_expression)
         self.btn_point.clicked.connect(self.add_point)
-
         self.btn_calcul.clicked.connect(self.calculate)
+        self.btn_sign.clicked.connect(self.negate)
 
         self.verticalLayout.addLayout(self.layout_btns)
         self.stack.addWidget(page)
@@ -749,67 +750,102 @@ class MainWindow(QMainWindow):
         calc = Calculator()
         enter = self.le_enter.text()
         enter = enter.replace('Ans', str(self.ans)).replace("π", 'pi')
+        enter = self.close_part(enter)
         res = str(calc.combined_calc(enter))
         self.lbl_temp.setText(self.remove_trailing_zeros(res))
         self.ans = res
         return res
-    '''
-    def add_to_expression(self, value):
-        curr = self.le_enter.text()
-        if curr == "0" or curr == "Ошибка":
-            self.le_enter.setText(value)
-        else:
-            self.le_enter.setText(curr + value)'''
 
     def add_to_expression(self, value):
-        f = False
         cursor_pos = self.le_enter.cursorPosition()
         text = self.le_enter.text()
 
-        if text == "0" or 'Ошибка' in text:
+        if text in ("Ошибка", "0"):
             text, cursor_pos = "", 0
-        if len(text) >= 2:
-            if text[cursor_pos - 3:cursor_pos - 1] == '()' or text[cursor_pos - 3:cursor_pos - 1] == '||':
-                self.le_enter.setCursorPosition(cursor_pos - 2)
-                self.le_enter.setText(
-                    text[:cursor_pos - 3]+text[cursor_pos - 3] + value + [cursor_pos - 2])
-                print('goog')
+
+        prev_char = text[cursor_pos-1:cursor_pos] if cursor_pos > 0 else ""
+        next_char = text[cursor_pos:cursor_pos+1] if cursor_pos < len(text) else ""
+        is_operator = value in ["+", "−", "×", "÷", "//", "%"]
+        is_number = value.isdigit() or value == "."
+        is_function = value in ["sin(", "cos(", "tan(", "ctg(", "log(", "√(", "∫(", "arc"]
+
+        # Проверка на пустые скобки () или модуль ||
+        inside_empty = cursor_pos >= 1 and cursor_pos <= len(text) and (
+            text[cursor_pos-1:cursor_pos+1] == "()" or
+            text[cursor_pos-1:cursor_pos+1] == "||"
+        )
+        if inside_empty:
+            if text[cursor_pos-1:cursor_pos+1] == "()" and (is_number or is_function or value in ["e", "π", "Ans"]):
+                text = text[:cursor_pos-1] + value + text[cursor_pos:]
+                self.le_enter.setText(text)
+                self.le_enter.setCursorPosition(cursor_pos-1 + len(value))
+                return
+            if text[cursor_pos-1:cursor_pos+1] == "||" and is_number:
+                text = text[:cursor_pos-1] + value + text[cursor_pos:]
+                self.le_enter.setText(text)
+                self.le_enter.setCursorPosition(cursor_pos-1 + len(value))
                 return
 
-        # Проверка, внутри ли курсор функции
-        is_inside_func = any(text[:cursor_pos].endswith(
-            p) for p in ["sin(", "cos(", "tan(", "ctg(", "√(", "log("])
+        # Проверка, находится ли курсор внутри функции
+        open_paren = 0
+        comma_pos = -1
+        for i in range(cursor_pos):
+            if text[i:i+4] in ["sin(", "cos(", "tan(", "ctg("] or text[i:i+3] == "log(":
+                open_paren += 1
+            elif text[i] == '(':
+                open_paren += 1
+            elif text[i] == ')':
+                open_paren -= 1
+            elif text[i] == ',' and open_paren > 0:
+                comma_pos = i
+
+        # Закрытие функции перед оператором
+        if is_operator and open_paren > 0 and prev_char.isdigit():
+            text = text[:cursor_pos] + ")" + text[cursor_pos:]
+            cursor_pos += 1
+            next_char = ")"
+
+        # Валидация факториала
+        if value == "!":
+            start = cursor_pos
+            while start > 0 and (text[start-1].isdigit() or text[start-1] == "."):
+                start -= 1
+            try:
+                num = float(text[start:cursor_pos])
+                if not num.is_integer() or num < 0:
+                    return
+            except ValueError:
+                return
+
+        # Обработка модуля
+        if value == "|":
+            insert_text = "|" if prev_char == "|" else "||"
+            new_pos = cursor_pos + (1 if prev_char == "|" else 1)
+            if prev_char != "|":
+                self.le_enter.setText(text[:cursor_pos] + insert_text + text[cursor_pos:])
+                self.le_enter.setCursorPosition(new_pos)
+                return
+
+        # Формирование текста для вставки
         insert_text = (
-            "log()" if value == "log" else
-            value + ")" if value in ["sin(", "cos(", "tan(", "ctg(", "√("] and not is_inside_func else
-            "||" if value == "|" else
-            "∫( , , )" if value == "∫(" else
-            f" {value} " if value in "+-*/" else
-            " " if value == " " and text[cursor_pos:cursor_pos+1] != " " else
-            ", " if value == "," and text[:cursor_pos].endswith("log(") else
+            "∫(,,)" if value == "∫(" else
+            "log(,)" if value == "log(" else
+            f" {value} " if is_operator and prev_char not in " +−×÷/%(" and next_char not in " +−×÷/%)" else
+            " " if value == " " and prev_char != " " and next_char != " " else
             value
         )
 
         # Вычисление новой позиции курсора
         new_pos = cursor_pos + (
-            3 if value in ["log", 'cos', 'sin', 'tan', 'ctg'] else
-            2 if value in ["∫(", ","] else
-            1 if value in ["|x|", " "] else
-            2 if value == "^" else
+            2 if value in [",", "^"] else
             5 if value == "arc" else
-            len(insert_text)
+            2 if value == "∫(" else
+            3 if is_operator and insert_text.startswith(" ") else
+            len(value) if value in ["sin(", "cos(", "tan(", "ctg(", "log("] else
+            1
         )
 
-        # Дополнение для чисел внутри функций
-        if value in "0123456789.pi+e-" and is_inside_func:
-            insert_text += ", )" if text[:cursor_pos].endswith(
-                "log(") and ",)" not in text[cursor_pos:] else ' )'
-            if text[cursor_pos:cursor_pos+1] == ")":
-                new_pos += 1
-
-        # Обновление поля ввода
-        self.le_enter.setText(text[:cursor_pos] +
-                              insert_text + text[cursor_pos:])
+        self.le_enter.setText(text[:cursor_pos] + insert_text + text[cursor_pos:])
         self.le_enter.setCursorPosition(new_pos)
 
     def eventFilter(self, obj, event):
@@ -861,6 +897,61 @@ class MainWindow(QMainWindow):
         except ValueError:
             return s
 
+    def negate(self):
+        text = self.le_enter.text()
+        cursor_pos = self.le_enter.cursorPosition()
+        if text == '0' or "Ошибка" in text:
+            return
+        start, end = cursor_pos, cursor_pos
+        while start > 0 and (text[start-1].isdigit() or text[start-1] in ".−"):
+            start -= 1
+        while end < len(text) and (text[end-1].isdigit() or text[end-1] in ".−"):
+            end += 1
+        
+        numb = text[start:end]
+
+        if not numb or numb == "−":
+            return
+        
+        if numb.startswith("−"):
+            new_numb = numb[1:]
+        else:
+            new_numb = "−" + numb
+        
+        new_text = text[:start] + new_numb + text[end:]
+        self.le_enter.setText(new_text)
+        self.le_enter.setCursorPosition(start + len(new_numb))
+
+    def close_part(self, s):
+        res, stack = [], []
+        i = 0
+        while i < len(s):
+            if s[i:i+4] in ["sin(", "cos(", "tan(", "ctg("]:
+                res.append(s[i:i+4])
+                stack.append(s[i:i+4])
+                i += 4
+            elif s[i:i+4] == "log(":
+                res.append("log(")
+                stack.append("log(")
+                i += 4
+            elif s[i] =='(':
+                res.append('(')
+                stack.append('(')
+                i += 1
+            elif s[i] ==')':
+                if stack:
+                    stack.pop()
+                    res.append(')')
+                i += 1
+            else:
+                res.append(s[i])
+                i += 1
+        
+        while stack:
+            stack.pop()
+            res.append(')')
+        
+        return ''.join(res)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
