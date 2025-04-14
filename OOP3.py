@@ -12,7 +12,8 @@ class Calculator:
     def diff_math_function(self, s):
         s = s.strip()
         opers = {
-            'arccos':acos,
+            'log':log,
+            'arccos': acos,
             "arccosh": acosh,
             "arcsin": asin,
             "arctan": atan,
@@ -30,21 +31,28 @@ class Calculator:
             oper, num = s[-1], s[:-1]
             num = self.easy_math(num)
         elif s.startswith("|") and s.endswith("|"):
-                inner_expr = s[1:-1]
-                inner_res = self.combined_calc(inner_expr)
-                num = float(inner_res)
-                return fabs(num)
+            inner_expr = s[1:-1]
+            inner_res = self.combined_calc(inner_expr)
+            num = float(inner_res)
+            return fabs(num)
         elif s.startswith("√"):
-                num_str = s[1:]
-                if num_str == "pi":
-                    num = pi
-                elif num_str == "e":
-                    num = e
-                else:
-                    num = float(num_str)
-                if num < 0:
-                    raise ValueError("Корень из отрицательного числа")
-                return sqrt(num)
+            num_str = s[1:]
+            if num_str == "pi":
+                num = pi
+            elif num_str == "e":
+                num = e
+            else:
+                num = float(num_str)
+            if num < 0:
+                raise ValueError("Корень из отрицательного числа")
+            return sqrt(num)
+        elif s.startswith('log'):
+            s = s[4:-1]
+            if ',' in s:
+                num, base = map(float, s.split(','))
+            else:
+                base = e
+            return log(num, base)
         elif s.startswith("∫"):
             oper = "∫"
             parts = s[1:].split(", ")
@@ -61,7 +69,7 @@ class Calculator:
             result = opers[oper](func_map[func_str], [(a, b)])[0]
             return round(result, 12)
         elif s.startswith("|") and s.endswith("|"):
-                oper, num = "|", s[1:-1]
+            oper, num = "|", s[1:-1]
         elif '(' in s:
             if s.endswith(')'):
                 s = s[:-1]
@@ -80,10 +88,11 @@ class Calculator:
             return cos(num) / sin(num)
         res = opers[oper](num)
 
-
         return round(res, 12)
+
     def easy_math(self, s):
-        s = s.replace("^", "**").replace("×", "*").replace("÷", '/').replace("−", "-")
+        s = s.replace("^", "**").replace("×",
+                                        "*").replace("÷", '/').replace("−", "-")
         if not s:
             raise ValueError("Пустая строка в easy_math")
         return eval(s)
@@ -108,10 +117,8 @@ class Calculator:
                     res = self.diff_math_function(part)
                 if res == int(res):
                     res = int(res)
-                s = s[: match.start()] + str(res) + s[match.end() :]
+                s = s[: match.start()] + str(res) + s[match.end():]
 
             return self.easy_math(s)
         except Exception as e:
             return f"Ошибка: {e}"
-
-calc = Calculator()
