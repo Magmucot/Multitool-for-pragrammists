@@ -8,11 +8,11 @@ from PySide6.QtWidgets import (
     QStackedWidget, QScrollArea,
     QMessageBox, QFrame,
     QGridLayout, QSizePolicy,
+    QSlider,QSpinBox, QAbstractSpinBox,
 )
-from scipy.integrate import nquad
-from PySide6.QtGui import QIcon, QCursor, QAction, QKeySequence
-from PySide6.QtCore import QSize, Qt,  QEvent
 import resources  # noqa: F401
+from PySide6.QtGui import QIcon, QCursor, QAction, QKeySequence
+from PySide6.QtCore import QSize, Qt, QEvent
 from OOP1 import Shifrator
 from OOP2 import Transformator
 from OOP3 import Calculator
@@ -24,18 +24,18 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Мультитул")
         self.resize(400, 400)
         self.setMinimumSize(QSize(300, 400))
-        self.setWindowIcon(QIcon(':/icons/icon.png'))
+        self.setWindowIcon(QIcon(":/icons/icon.png"))
         central_widget = QWidget()
 
         self.setStyleSheet(
             """QWidget {background-color: #121212; color: white; font-family: Work Sans;
-                           font-size: 12pt; font-weight: 600;}
-                           QPushButton {background-color: #282828; border:none;}
-                           QPushButton:hover {background-color: #888;}
-                           QPushButton:pressed {background-color: #AAA;}
-                           QComboBox {background-color: #282828; border: white 1px;}
-                           QLineEdit, QTextEdit {background-color: #282828; border: white 1px;}
-                           QLabel {color: #888; border: solid white 1px}"""
+                            font-size: 12pt; font-weight: 600;}
+                            QPushButton {background-color: #282828; border:none;}
+                            QPushButton:hover {background-color: #888;}
+                            QPushButton:pressed {background-color: #AAA;}
+                            QComboBox {background-color: #282828; border: white 1px;}
+                            QLineEdit, QTextEdit {background-color: #282828; border: white 1px;}
+                            QLabel {color: #888; border: solid white 1px}"""
         )
 
         self.btn_active_style = "QPushButton { background-color: #A04602; border-radius: 2px; border: none; }"
@@ -46,41 +46,51 @@ class MainWindow(QMainWindow):
         self.main_layout.setContentsMargins(10, 10, 10, 10)
 
         self.btn_style = (
-            "QPushButton {color: black;background-color: #FF8C00; border-radius: 2px; border: none;}"
-            "QPushButton:hover {background-color: #E07B00; border: none;}"
-            "QPushButton:pressed {background-color: #CC6A00;border: none;}"
-        )
+            """QPushButton {color: black;background-color: #FF8C00; border-radius: 2px; border: none;}
+            QPushButton:hover {background-color: #E07B00; border: none;}
+            QPushButton:pressed {background-color: #CC6A00;border: none;}""")
 
-        self.ans = ''
-
+        self.ans = ""
         self.up_layout = QHBoxLayout()
         self.btn_shifr = QPushButton()
         self.btn_shifr.setStyleSheet(self.btn_style)
         icon = QIcon(":/icons/fingerprint.png")
         icon1 = QIcon(":/icons/binary.png")
         icon2 = QIcon(":/icons/calculate.png")
+        icon3 = QIcon(":/icons/vpnkey_black.png")
         self.btn_shifr.setIcon(icon)
         self.btn_shifr.setIconSize(QSize(32, 32))
         self.btn_shifr.setFixedSize(40, 40)
+
 
         self.btn_transf = QPushButton()
         self.btn_transf.setIcon(icon1)
         self.btn_transf.setIconSize(QSize(30, 30))
         self.btn_transf.setFixedSize(40, 40)
         self.btn_transf.setStyleSheet(self.btn_style)
+
         self.btn_calc = QPushButton()
         self.btn_calc.setIcon(icon2)
         self.btn_calc.setIconSize(QSize(32, 32))
         self.btn_calc.setFixedSize(40, 40)
         self.btn_calc.setStyleSheet(
-            "QPushButton {background-color: #FF8C00; border-radius: 2px;border: none;}"
-            "QPushButton:hover {background-color: #E07B00;border: none;}"
-            "QPushButton:pressed {background-color: #CC6A00;border: none;}"
-        )
+            """QPushButton {background-color: #FF8C00; border-radius: 2px;border: none;}
+            QPushButton:hover {background-color: #E07B00;border: none;}
+            QPushButton:pressed {background-color: #CC6A00;border: none;}""")
+
+        self.btn_pass = QPushButton()
+        self.btn_pass.setIcon(icon3)
+        self.btn_pass.setIconSize(QSize(32, 32))
+        self.btn_pass.setFixedSize(40, 40)
+        self.btn_pass.setStyleSheet(
+            """QPushButton {background-color: #FF8C00; border-radius: 2px;border: none;}
+            QPushButton:hover {background-color: #E07B00;border: none;}
+            QPushButton:pressed {background-color: #CC6A00;border: none;}""")
 
         self.up_layout.addWidget(self.btn_shifr)
         self.up_layout.addWidget(self.btn_transf)
         self.up_layout.addWidget(self.btn_calc)
+        self.up_layout.addWidget(self.btn_pass)
         self.up_layout.addStretch()
 
         self.main_layout.addLayout(self.up_layout)
@@ -96,28 +106,18 @@ class MainWindow(QMainWindow):
         self.shifr_page()
         self.transf_page()
         self.calc_page()
+        self.pass_page()
 
-        self.btn_shifr.clicked.connect(self.show_shifr_p)
-        self.btn_transf.clicked.connect(self.show_transf_p)
-        self.btn_calc.clicked.connect(self.show_calc_p)
+        self.btn_shifr.clicked.connect(lambda: self.show_page(0, self.btn_shifr))
+        self.btn_transf.clicked.connect(lambda: self.show_page(1, self.btn_transf))
+        self.btn_calc.clicked.connect(lambda: self.show_page(2, self.btn_calc))
+        self.btn_pass.clicked.connect(lambda: self.show_page(3, self.btn_pass))
 
-    def show_shifr_p(self):
-        self.stack.setCurrentIndex(0)
-        self.btn_shifr.setStyleSheet(self.btn_active_style)
-        self.btn_transf.setStyleSheet(self.btn_inactive_style)
-        self.btn_calc.setStyleSheet(self.btn_inactive_style)
-
-    def show_transf_p(self):
-        self.stack.setCurrentIndex(1)
-        self.btn_transf.setStyleSheet(self.btn_active_style)
-        self.btn_shifr.setStyleSheet(self.btn_inactive_style)
-        self.btn_calc.setStyleSheet(self.btn_inactive_style)
-
-    def show_calc_p(self):
-        self.stack.setCurrentIndex(2)
-        self.btn_shifr.setStyleSheet(self.btn_inactive_style)
-        self.btn_transf.setStyleSheet(self.btn_inactive_style)
-        self.btn_calc.setStyleSheet(self.btn_active_style)
+    def show_page(self, page_index, active_button):
+        self.stack.setCurrentIndex(page_index)
+        buttons = [self.btn_shifr, self.btn_transf, self.btn_calc, self.btn_pass]
+        for button in buttons:
+            button.setStyleSheet(self.btn_active_style if button == active_button else self.btn_inactive_style)
         self.le_enter.setFocus()
 
     def shifr_page(self):
@@ -166,14 +166,266 @@ class MainWindow(QMainWindow):
         layout.addWidget(scroll_area)
         self.stack.addWidget(page)
 
+    def pass_page(self):
+        page = QWidget()
+        page.setStyleSheet("""
+            QWidget {font-size: 16pt; font-weight: 600;}
+            QPushButton {
+                border-radius: 5px;
+                background-color: transparent;
+                border: 2px solid gray;
+            }
+            QPushButton:pressed {border: 3px solid #FF8C00;}
+            QPushButton:checked {
+                background-color: #010; border: 3px solid #FF8C00;}
+            QSpinBox {
+                border: 2px solid gray; border-radius: 5px;
+                background: transparent;padding: 5px;}
+            QSpinBox:hover {
+                border-color: #FF8C00;
+            }
+        """)
+        self.gridLayout = QGridLayout(page)
+        self.layout_length = QHBoxLayout()
+        self.slider_length = QSlider(page)
+        self.slider_length.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self.slider_length.setStyleSheet("""
+            QSlider::groove:horizontal {
+                background-color: transparent;
+                height: 5px;}
+            QSlider::sub-page:horizontal {
+                background-color: #FF8C00;}
+            QSlider::add-page:horizontal {
+                background-color: gray;}
+            QSlider::handle:horizontal {
+                background-color: orange; width: 22px;
+                border-radius: 10px; margin-top: -8px;
+                margin-bottom: -8px;}""")
+        self.slider_length.setMaximum(500)
+        self.slider_length.setValue(12)
+        self.slider_length.setOrientation(Qt.Orientation.Horizontal)
+
+        self.layout_length.addWidget(self.slider_length)
+
+        self.cnt_length = QSpinBox(page)
+        self.cnt_length.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self.cnt_length.setStyleSheet("")
+        self.cnt_length.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.cnt_length.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
+        self.cnt_length.setMaximum(999)
+
+        self.layout_length.addWidget(self.cnt_length)
+
+        self.gridLayout.addLayout(self.layout_length, 3, 0, 1, 1)
+
+        self.layout_info = QHBoxLayout()
+        self.label_diff = QLabel(page)
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.label_diff.sizePolicy().hasHeightForWidth())
+        self.label_diff.setSizePolicy(sizePolicy)
+        self.label_diff.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.layout_info.addWidget(self.label_diff)
+
+        self.label_entropy = QLabel(page)
+        sizePolicy.setHeightForWidth(self.label_entropy.sizePolicy().hasHeightForWidth())
+        self.label_entropy.setSizePolicy(sizePolicy)
+        self.label_entropy.setMouseTracking(False)
+        self.label_entropy.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.layout_info.addWidget(self.label_entropy)
+
+        self.gridLayout.addLayout(self.layout_info, 2, 0, 1, 1)
+
+        self.layout_password = QHBoxLayout()
+        self.frame = QFrame(page)
+        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Maximum)
+        sizePolicy1.setHorizontalStretch(0)
+        sizePolicy1.setVerticalStretch(0)
+        sizePolicy1.setHeightForWidth(self.frame.sizePolicy().hasHeightForWidth())
+        self.frame.setSizePolicy(sizePolicy1)
+        self.frame.setStyleSheet("""
+            QFrame {
+                border: 2px solid gray;
+                border-radius: 5px;
+                margin-right: 0;}
+            QFrame:hover {
+                border-color: #FF8C00;}""")
+        self.frame.setFrameShape(QFrame.Shape.StyledPanel)
+        self.frame.setFrameShadow(QFrame.Shadow.Raised)
+        self.horizontalLayout = QHBoxLayout(self.frame)
+        self.password = QLineEdit(self.frame)
+        sizePolicy1.setHeightForWidth(self.password.sizePolicy().hasHeightForWidth())
+        self.password.setSizePolicy(sizePolicy1)
+        self.password.setStyleSheet("""
+            QLineEdit {
+                background-color: transparent;
+                border: none;
+                margin: 0;
+                font-size: 20pt;}""")
+        self.horizontalLayout.addWidget(self.password)
+
+        self.btn_visibility = QPushButton(self.frame)
+        sizePolicy2 = QSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
+        sizePolicy2.setHorizontalStretch(0)
+        sizePolicy2.setVerticalStretch(0)
+        sizePolicy2.setHeightForWidth(self.btn_visibility.sizePolicy().hasHeightForWidth())
+        self.btn_visibility.setSizePolicy(sizePolicy2)
+        self.btn_visibility.setStyleSheet("""
+            QPushButton {
+                border: none;
+                margin: 0;
+                background-color: transparent;}""")
+        icon = QIcon()
+        icon.addFile(":/icons/visibility_off_white.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon.addFile(":/icons/visibility_white.svg", QSize(), QIcon.Mode.Normal, QIcon.State.On)
+        icon.addFile(":/icons/visibility_white.svg", QSize(), QIcon.Mode.Disabled, QIcon.State.Off)
+        icon.addFile(":/icons/visibility_off_white.svg", QSize(), QIcon.Mode.Disabled, QIcon.State.On)
+        self.btn_visibility.setIcon(icon)
+        self.btn_visibility.setIconSize(QSize(35, 35))
+        self.btn_visibility.setCheckable(True)
+
+        self.horizontalLayout.addWidget(self.btn_visibility)
+
+        self.layout_password.addWidget(self.frame)
+
+        self.btn_refresh = QPushButton(page)
+        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
+        sizePolicy3.setHorizontalStretch(0)
+        sizePolicy3.setVerticalStretch(0)
+        sizePolicy3.setHeightForWidth(self.btn_refresh.sizePolicy().hasHeightForWidth())
+        self.btn_refresh.setSizePolicy(sizePolicy3)
+        icon1 = QIcon()
+        icon1.addFile(":/icons/refresh_white.svg", QSize(), QIcon.Mode.Disabled, QIcon.State.On)
+        self.btn_refresh.setIcon(icon1)
+        self.btn_refresh.setIconSize(QSize(52, 52))
+
+        self.layout_password.addWidget(self.btn_refresh)
+
+        self.btn_copy = QPushButton(page)
+        sizePolicy3.setHeightForWidth(self.btn_copy.sizePolicy().hasHeightForWidth())
+        self.btn_copy.setSizePolicy(sizePolicy3)
+        icon2 = QIcon()
+        icon2.addFile(":/icons/copy_white.svg", QSize(), QIcon.Mode.Disabled, QIcon.State.On)
+        self.btn_copy.setIcon(icon2)
+        self.btn_copy.setIconSize(QSize(52, 52))
+
+        self.layout_password.addWidget(self.btn_copy)
+
+        self.gridLayout.addLayout(self.layout_password, 1, 0, 1, 1)
+
+        self.icon_lock = QPushButton(page)
+        self.icon_lock.setEnabled(False)
+        self.icon_lock.setStyleSheet("""border: none""")
+        icon3 = QIcon()
+        icon3.addFile(":/icons/lock_white.svg", QSize(), QIcon.Mode.Disabled, QIcon.State.On)
+        self.icon_lock.setIcon(icon3)
+        self.icon_lock.setIconSize(QSize(70, 70))
+
+        self.gridLayout.addWidget(self.icon_lock, 0, 0, 1, 1)
+
+        self.layout_chars = QHBoxLayout()
+        self.layout_lower = QVBoxLayout()
+        self.btn_lower = QPushButton("a-z", page)
+        sizePolicy1.setHeightForWidth(self.btn_lower.sizePolicy().hasHeightForWidth())
+        self.btn_lower.setSizePolicy(sizePolicy1)
+        self.btn_lower.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self.btn_lower.setCheckable(True)
+        self.btn_lower.setChecked(True)
+
+        self.layout_lower.addWidget(self.btn_lower)
+
+        self.cnt_lower = QSpinBox(page)
+        sizePolicy1.setHeightForWidth(self.cnt_lower.sizePolicy().hasHeightForWidth())
+        self.cnt_lower.setSizePolicy(sizePolicy1)
+        self.cnt_lower.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self.cnt_lower.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.cnt_lower.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
+        self.cnt_lower.setMaximum(999)
+
+        self.layout_lower.addWidget(self.cnt_lower)
+
+        self.layout_chars.addLayout(self.layout_lower)
+
+        self.verticalLayout = QVBoxLayout()
+        self.btn_up = QPushButton("A-Z", page)
+        self.btn_up.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self.btn_up.setLayoutDirection(Qt.LayoutDirection.LeftToRight)
+        self.btn_up.setCheckable(True)
+        self.btn_up.setChecked(True)
+        self.verticalLayout.addWidget(self.btn_up)
+
+        self.cnt_up = QSpinBox(page)
+        sizePolicy1.setHeightForWidth(self.cnt_up.sizePolicy().hasHeightForWidth())
+        self.cnt_up.setSizePolicy(sizePolicy1)
+        self.cnt_up.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self.cnt_up.setFrame(True)
+        self.cnt_up.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.cnt_up.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
+        self.cnt_up.setMaximum(999)
+
+        self.verticalLayout.addWidget(self.cnt_up)
+
+        self.layout_chars.addLayout(self.verticalLayout)
+
+        self.verticalLayout_8 = QVBoxLayout()
+        self.btn_nums = QPushButton("0-9", page)
+        self.btn_nums.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self.btn_nums.setCheckable(True)
+        self.btn_nums.setChecked(True)
+
+        self.verticalLayout_8.addWidget(self.btn_nums)
+
+        self.cnt_nums = QSpinBox(page)
+        sizePolicy1.setHeightForWidth(self.cnt_nums.sizePolicy().hasHeightForWidth())
+        self.cnt_nums.setSizePolicy(sizePolicy1)
+        self.cnt_nums.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self.cnt_nums.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.cnt_nums.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
+        self.cnt_nums.setMaximum(999)
+
+        self.verticalLayout_8.addWidget(self.cnt_nums)
+
+        self.layout_chars.addLayout(self.verticalLayout_8)
+
+        self.verticalLayout_9 = QVBoxLayout()
+        self.btn_spec = QPushButton("$#*", page)
+        sizePolicy4 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
+        sizePolicy4.setHorizontalStretch(0)
+        sizePolicy4.setVerticalStretch(0)
+        sizePolicy4.setHeightForWidth(self.btn_spec.sizePolicy().hasHeightForWidth())
+        self.btn_spec.setSizePolicy(sizePolicy4)
+        self.btn_spec.setMinimumSize(QSize(0, 33))
+        self.btn_spec.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self.btn_spec.setCheckable(True)
+
+        self.verticalLayout_9.addWidget(self.btn_spec)
+
+        self.cnt_spec = QSpinBox(page)
+        sizePolicy1.setHeightForWidth(self.cnt_spec.sizePolicy().hasHeightForWidth())
+        self.cnt_spec.setSizePolicy(sizePolicy1)
+        self.cnt_spec.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self.cnt_spec.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.cnt_spec.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
+        self.cnt_spec.setMaximum(999)
+
+        self.verticalLayout_9.addWidget(self.cnt_spec)
+
+        self.layout_chars.addLayout(self.verticalLayout_9)
+
+        self.gridLayout.addLayout(self.layout_chars, 4, 0, 1, 1)
+
+        self.stack.addWidget(page)
+
     def btn_shifr_click(self):
         stor = self.combo_deystv.currentText()
         tip = self.combo_tip.currentText()
         text = self.input_text.toPlainText()
         key = self.input_key.text()
         if not text or not stor or not tip or not key:
-            QMessageBox.warning(
-                self, "Ошибка!", "Ошибка!\nЗаполните все поля!")
+            QMessageBox.warning(self, "Ошибка!", "Ошибка!\nЗаполните все поля!")
             return
         if tip == "Цезарь" and not key.isdigit():
             QMessageBox.warning(
@@ -191,8 +443,7 @@ class MainWindow(QMainWindow):
             list(map(int, self.input_osn2.text().split())),
         )
         if not nums or not sp_osn1 or not sp_osn2:
-            QMessageBox.warning(
-                self, "Ошибка!", "Ошибка!\nЗаполните все поля!")
+            QMessageBox.warning(self, "Ошибка!", "Ошибка!\nЗаполните все поля!")
             return
         if (
             len(sp_osn1) != len(sp_osn2)
@@ -223,8 +474,7 @@ class MainWindow(QMainWindow):
         sp_osn2 = self.input_osn2.text().split()
 
         if not nums or not sp_osn1 or not sp_osn2:
-            QMessageBox.warning(
-                self, "Ошибка!", "Ошибка!\nЗаполните все поля!")
+            QMessageBox.warning(self, "Ошибка!", "Ошибка!\nЗаполните все поля!")
             return
 
         try:
@@ -348,8 +598,7 @@ class MainWindow(QMainWindow):
             base2 = int(base2_str) if base2_str else None
             res_base = int(res_base_str) if res_base_str else 10
         except ValueError:
-            QMessageBox.warning(
-                self, "Ошибка!", "Основания должны быть числами!")
+            QMessageBox.warning(self, "Ошибка!", "Основания должны быть числами!")
             return
 
         if (
@@ -364,12 +613,10 @@ class MainWindow(QMainWindow):
 
         try:
             if not base1:
-                max_digit = max(int(d, 36) if d.isalnum()
-                                else 0 for d in numb1)
+                max_digit = max(int(d, 36) if d.isalnum() else 0 for d in numb1)
                 base1 = max(max_digit + 1, 2)
             if not base2:
-                max_digit = max(int(d, 36) if d.isalnum()
-                                else 0 for d in numb2)
+                max_digit = max(int(d, 36) if d.isalnum() else 0 for d in numb2)
                 base2 = max(max_digit + 1, 2)
 
             num1 = int(numb1, base1)
@@ -397,13 +644,16 @@ class MainWindow(QMainWindow):
         page = QWidget()
         self.verticalLayout = QVBoxLayout(page)
         self.le_enter = QLineEdit(page)
-        self.le_enter.setSizePolicy(QSizePolicy(
-            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum))
-        self.le_enter.setStyleSheet(
-            "height: 45px;font-size:20pt;border:none;")
+        self.le_enter.setSizePolicy(
+            QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
+        )
+        self.le_enter.setStyleSheet("height: 45px;font-size:20pt;border:none;")
         self.le_enter.setMaxLength(1000)
         self.le_enter.setAlignment(
-            Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTrailing | Qt.AlignmentFlag.AlignVCenter)
+            Qt.AlignmentFlag.AlignRight
+            | Qt.AlignmentFlag.AlignTrailing
+            | Qt.AlignmentFlag.AlignVCenter
+        )
         self.le_enter.setReadOnly(True)
         self.le_enter.setText("0")
         self.verticalLayout.addWidget(self.le_enter)
@@ -411,16 +661,19 @@ class MainWindow(QMainWindow):
         self.le_enter.installEventFilter(self)
 
         self.lbl_temp = QLabel(page)
-        self.lbl_temp.setSizePolicy(QSizePolicy(
-            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum))
+        self.lbl_temp.setSizePolicy(
+            QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
+        )
         self.lbl_temp.setStyleSheet("color:#888;")
         self.lbl_temp.setAlignment(
-            Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTrailing | Qt.AlignmentFlag.AlignVCenter)
+            Qt.AlignmentFlag.AlignRight
+            | Qt.AlignmentFlag.AlignTrailing
+            | Qt.AlignmentFlag.AlignVCenter
+        )
         self.verticalLayout.addWidget(self.lbl_temp)
 
         self.layout_btns = QGridLayout()
-        sp = QSizePolicy(QSizePolicy.Policy.Preferred,
-                         QSizePolicy.Policy.Expanding)
+        sp = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
 
         self.btn_C = QPushButton(page)
         self.btn_C.setSizePolicy(sp)
@@ -439,10 +692,9 @@ class MainWindow(QMainWindow):
 
         self.btn_backspace = QPushButton(page)
         self.btn_backspace.setSizePolicy(sp)
-        self.btn_backspace.setShortcut('Backspace')
+        self.btn_backspace.setShortcut("Backspace")
         self.btn_backspace.setStyleSheet(self.btn_style)
-        self.btn_backspace.setCursor(
-            QCursor(Qt.CursorShape.PointingHandCursor))
+        self.btn_backspace.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.btn_backspace.setIcon(QIcon(":/icons/backspace_black.png"))
         self.btn_backspace.setIconSize(QSize(48, 48))
         self.layout_btns.addWidget(self.btn_backspace, 0, 2)
@@ -452,7 +704,7 @@ class MainWindow(QMainWindow):
         self.btn_level.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.btn_level.setText("^")
         self.btn_level.setShortcut("^")
-        self.layout_btns.addWidget(self.btn_level, 0, 3)
+        self.layout_btns.addWidget(self.btn_level, 1, 1)
 
         self.btn_ans = QPushButton(page)
         self.btn_ans.setSizePolicy(sp)
@@ -471,7 +723,7 @@ class MainWindow(QMainWindow):
         self.btn_div_c.setSizePolicy(sp)
         self.btn_div_c.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.btn_div_c.setText("//")
-        self.layout_btns.addWidget(self.btn_div_c, 1, 1)
+        self.layout_btns.addWidget(self.btn_div_c, 1, 4)
 
         self.btn_fact = QPushButton(page)
         self.btn_fact.setSizePolicy(sp)
@@ -490,7 +742,7 @@ class MainWindow(QMainWindow):
         self.btn_integr.setSizePolicy(sp)
         self.btn_integr.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.btn_integr.setText("∫")
-        self.layout_btns.addWidget(self.btn_integr, 1, 4)
+        self.layout_btns.addWidget(self.btn_integr, 0, 7)
 
         self.btn_mul = QPushButton(page)
         self.btn_mul.setSizePolicy(sp)
@@ -505,7 +757,7 @@ class MainWindow(QMainWindow):
         self.btn_right.setText("->")
         self.btn_right.setShortcut(Qt.Key.Key_Right)
         self.btn_right.setStyleSheet(self.btn_style)
-        self.layout_btns.addWidget(self.btn_right, 1, 7)
+        self.layout_btns.addWidget(self.btn_right, 0, 4)
 
         self.btn_left = QPushButton(page)
         self.btn_left.setSizePolicy(sp)
@@ -513,7 +765,7 @@ class MainWindow(QMainWindow):
         self.btn_left.setText("<-")
         self.btn_left.setShortcut(Qt.Key.Key_Left)
         self.btn_left.setStyleSheet(self.btn_style)
-        self.layout_btns.addWidget(self.btn_left, 0, 7)
+        self.layout_btns.addWidget(self.btn_left, 0, 3)
 
         self.btn_e = QPushButton(page)
         self.btn_e.setSizePolicy(sp)
@@ -646,7 +898,7 @@ class MainWindow(QMainWindow):
         self.btn_bracel.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.btn_bracel.setText("(")
         self.btn_bracel.setShortcut("(")
-        self.layout_btns.addWidget(self.btn_bracel, 5, 4)
+        self.layout_btns.addWidget(self.btn_bracel, 6, 3)
 
         self.btn_plus = QPushButton(page)
         self.btn_plus.setSizePolicy(sp)
@@ -673,7 +925,7 @@ class MainWindow(QMainWindow):
         self.btn_mod.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.btn_mod.setText("|x|")
         self.btn_mod.setShortcut("|")
-        self.layout_btns.addWidget(self.btn_mod, 6, 3)
+        self.layout_btns.addWidget(self.btn_mod, 5, 4)
 
         self.btn_bracer = QPushButton(page)
         self.btn_bracer.setSizePolicy(sp)
@@ -686,7 +938,7 @@ class MainWindow(QMainWindow):
         self.btn_log.setSizePolicy(sp)
         self.btn_log.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.btn_log.setText("log(x,b)")
-        self.layout_btns.addWidget(self.btn_log, 0, 4)
+        self.layout_btns.addWidget(self.btn_log, 1, 7)
 
         self.btn_calcul = QPushButton(page)
         self.btn_calcul.setSizePolicy(sp)
@@ -695,11 +947,13 @@ class MainWindow(QMainWindow):
         self.layout_btns.addWidget(self.btn_calcul, 6, 6)
 
         calc_action = QAction(self)
-        calc_action.setShortcuts([
-            QKeySequence("="),
-            QKeySequence(Qt.Key.Key_Return),
-            QKeySequence(Qt.Key.Key_Enter)
-        ])
+        calc_action.setShortcuts(
+            [
+                QKeySequence("="),
+                QKeySequence(Qt.Key.Key_Return),
+                QKeySequence(Qt.Key.Key_Enter),
+            ]
+        )
         calc_action.triggered.connect(self.calculate)
         self.btn_calcul.addAction(calc_action)
 
@@ -723,8 +977,8 @@ class MainWindow(QMainWindow):
         self.btn_tan.clicked.connect(lambda: self.add_to_expression("tan("))
         self.btn_ctg.clicked.connect(lambda: self.add_to_expression("ctg("))
         self.btn_arc.clicked.connect(lambda: self.add_to_expression("arc"))
-        self.btn_ans.clicked.connect(lambda: self.add_to_expression(" Ans "))
-        self.btn_mod.clicked.connect(lambda: self.add_to_expression("||"))
+        self.btn_ans.clicked.connect(lambda: self.add_to_expression(" Ans"))
+        self.btn_mod.clicked.connect(lambda: self.add_to_expression("|"))
         self.btn_plus.clicked.connect(lambda: self.add_to_expression("+"))
         self.btn_neg.clicked.connect(lambda: self.add_to_expression("−"))
         self.btn_rem.clicked.connect(lambda: self.add_to_expression("%"))
@@ -742,6 +996,8 @@ class MainWindow(QMainWindow):
         self.btn_point.clicked.connect(self.add_point)
         self.btn_calcul.clicked.connect(self.calculate)
         self.btn_sign.clicked.connect(self.negate)
+        self.btn_right.clicked.connect(self.move_cursor_r)
+        self.btn_left.clicked.connect(self.move_cursor_l)
 
         self.verticalLayout.addLayout(self.layout_btns)
         self.stack.addWidget(page)
@@ -749,7 +1005,7 @@ class MainWindow(QMainWindow):
     def calculate(self):
         calc = Calculator()
         enter = self.le_enter.text()
-        enter = enter.replace('Ans', str(self.ans)).replace("π", 'pi')
+        enter = enter.replace("Ans", str(self.ans)).replace("π", "pi")
         enter = self.close_part(enter)
         res = str(calc.combined_calc(enter))
         self.lbl_temp.setText(self.remove_trailing_zeros(res))
@@ -763,52 +1019,50 @@ class MainWindow(QMainWindow):
         if text in ("Ошибка", "0"):
             text, cursor_pos = "", 0
 
-        prev_char = text[cursor_pos-1:cursor_pos] if cursor_pos > 0 else ""
-        next_char = text[cursor_pos:cursor_pos+1] if cursor_pos < len(text) else ""
+        p_char = text[cursor_pos - 1:cursor_pos] if cursor_pos > 0 else ""
+        n_char = text[cursor_pos:cursor_pos + 1] if cursor_pos < len(text) else ""
+
         is_operator = value in ["+", "−", "×", "÷", "//", "%"]
         is_number = value.isdigit() or value == "."
         is_function = value in ["sin(", "cos(", "tan(", "ctg(", "log(", "√(", "∫(", "arc"]
 
-        # Проверка на пустые скобки () или модуль ||
-        inside_empty = cursor_pos >= 1 and cursor_pos <= len(text) and (
-            text[cursor_pos-1:cursor_pos+1] == "()" or
-            text[cursor_pos-1:cursor_pos+1] == "||"
-        )
-        if inside_empty:
-            if text[cursor_pos-1:cursor_pos+1] == "()" and (is_number or is_function or value in ["e", "π", "Ans"]):
-                text = text[:cursor_pos-1] + value + text[cursor_pos:]
-                self.le_enter.setText(text)
-                self.le_enter.setCursorPosition(cursor_pos-1 + len(value))
-                return
-            if text[cursor_pos-1:cursor_pos+1] == "||" and is_number:
-                text = text[:cursor_pos-1] + value + text[cursor_pos:]
-                self.le_enter.setText(text)
-                self.le_enter.setCursorPosition(cursor_pos-1 + len(value))
-                return
+        inside_empty = (
+            cursor_pos >= 1 and cursor_pos <= len(text) and
+            text[cursor_pos - 1:cursor_pos + 1] in ["()", "||"])
 
-        # Проверка, находится ли курсор внутри функции
-        open_paren = 0
-        comma_pos = -1
-        for i in range(cursor_pos):
-            if text[i:i+4] in ["sin(", "cos(", "tan(", "ctg("] or text[i:i+3] == "log(":
+        if inside_empty and (is_number or is_function or value in ["e", "π", "Ans"]):
+            text = text[:cursor_pos] + value + text[cursor_pos:]
+            self.le_enter.setText(text)
+            self.le_enter.setCursorPosition(cursor_pos + len(value))
+            return
+
+        open_paren, i = 0, 0
+        while i < cursor_pos:
+            if text[i:i + 4] in ["sin(", "cos(", "tan(", "ctg("]:
                 open_paren += 1
-            elif text[i] == '(':
+                i += 4
+            elif text[i:i + 4] == "log(":
                 open_paren += 1
-            elif text[i] == ')':
+                i += 4
+            elif text[i] == "(":
+                open_paren += 1
+                i += 1
+            elif text[i] == ")":
                 open_paren -= 1
-            elif text[i] == ',' and open_paren > 0:
-                comma_pos = i
+                i += 1
+            else:
+                i += 1
 
-        # Закрытие функции перед оператором
-        if is_operator and open_paren > 0 and prev_char.isdigit():
+
+        if open_paren > 0 and (p_char.isdigit() or p_char in ["e", "π", "Ans"]) and value not in [")"] + ["+", "−", "×", "÷", "//", "%"]:
             text = text[:cursor_pos] + ")" + text[cursor_pos:]
             cursor_pos += 1
-            next_char = ")"
+            n_char = ")"
 
-        # Валидация факториала
+
         if value == "!":
             start = cursor_pos
-            while start > 0 and (text[start-1].isdigit() or text[start-1] == "."):
+            while start > 0 and (text[start - 1].isdigit() or text[start - 1] == "."):
                 start -= 1
             try:
                 num = float(text[start:cursor_pos])
@@ -817,35 +1071,43 @@ class MainWindow(QMainWindow):
             except ValueError:
                 return
 
-        # Обработка модуля
         if value == "|":
-            insert_text = "|" if prev_char == "|" else "||"
-            new_pos = cursor_pos + (1 if prev_char == "|" else 1)
-            if prev_char != "|":
-                self.le_enter.setText(text[:cursor_pos] + insert_text + text[cursor_pos:])
-                self.le_enter.setCursorPosition(new_pos)
-                return
+            start = cursor_pos
+            end = cursor_pos
+            while start > 0 and (text[start - 1].isdigit() or text[start - 1] in ".−eπ"):
+                start -= 1
+            while end < len(text) and (text[end].isdigit() or text[end] in ".−eπ"):
+                end += 1
+            if start != end:
+                text = text[:start] + "|" + text[start:end] + "|" + text[end:]
+                self.le_enter.setText(text)
+                self.le_enter.setCursorPosition(end + 2)
+            else:
+                insert_text = "||"
+                text = text[:cursor_pos] + insert_text + text[cursor_pos:]
+                self.le_enter.setText(text)
+                self.le_enter.setCursorPosition(cursor_pos + 1)
+            return
 
-        # Формирование текста для вставки
         insert_text = (
             "∫(,,)" if value == "∫(" else
             "log(,)" if value == "log(" else
-            f" {value} " if is_operator and prev_char not in " +−×÷/%(" and next_char not in " +−×÷/%)" else
-            " " if value == " " and prev_char != " " and next_char != " " else
+            f" {value} " if is_operator and p_char not in " +−×÷/%(|" and n_char not in " +−×÷/%)|" else
+            " " if value == " " and p_char != " " and n_char != " " else
             value
         )
 
-        # Вычисление новой позиции курсора
         new_pos = cursor_pos + (
             2 if value in [",", "^"] else
             5 if value == "arc" else
             2 if value == "∫(" else
             3 if is_operator and insert_text.startswith(" ") else
             len(value) if value in ["sin(", "cos(", "tan(", "ctg(", "log("] else
-            1
+            len(insert_text)
         )
 
-        self.le_enter.setText(text[:cursor_pos] + insert_text + text[cursor_pos:])
+        text = text[:cursor_pos] + insert_text + text[cursor_pos:]
+        self.le_enter.setText(text)
         self.le_enter.setCursorPosition(new_pos)
 
     def eventFilter(self, obj, event):
@@ -856,68 +1118,70 @@ class MainWindow(QMainWindow):
 
             if event.key() == Qt.Key.Key_Left:
                 self.le_enter.setCursorPosition(max(0, cursor_pos - 1))
-                return True
+                return
             elif event.key() == Qt.Key.Key_Right:
                 self.le_enter.setCursorPosition(min(len(text), cursor_pos + 1))
-                return True
+                return
             elif event.key() == Qt.Key.Key_Space:
                 self.add_to_expression(" ")
-                return True
+                return
         return super().eventFilter(obj, event)
 
     def clear_expression(self):
         self.lbl_temp.clear()
-        self.le_enter.setText('0')
+        self.le_enter.setText("0")
 
     def backspace(self):
         current = self.le_enter.text()
         if current != "Ошибка" and len(current) > 1:
             self.le_enter.setText(current[:-1])
         else:
-            self.le_enter.setText('0')
+            self.le_enter.setText("0")
 
     def clear_entry(self):
-        self.le_enter.setText('0')
+        self.le_enter.setText("0")
 
     def add_point(self):
-        if '.' not in self.le_enter.text():
-            self.le_enter.setText(self.le_enter.text() + '.')
+        if "." not in self.le_enter.text():
+            self.le_enter.setText(self.le_enter.text() + ".")
 
     def add_temp(self):
         btn = self.sender()
         enter = self.remove_trailing_zeros(self.le_enter.text())
 
-        self.lbl_temp.setText(self.lbl_temp.text() + enter + f' {btn.text()} ')
-        self.le_enter.setText('0')
+        self.lbl_temp.setText(self.lbl_temp.text() + enter + f" {btn.text()} ")
+        self.le_enter.setText("0")
 
     def remove_trailing_zeros(self, s: str) -> str:
         try:
             num = float(s)
-            return str(int(num)) if num.is_integer() else str(num).rstrip("0").rstrip(".")
+            return (
+                str(int(num)) if num.is_integer() else str(num).rstrip("0").rstrip(".")
+            )
         except ValueError:
             return s
 
     def negate(self):
         text = self.le_enter.text()
         cursor_pos = self.le_enter.cursorPosition()
-        if text == '0' or "Ошибка" in text:
+        if text == "0" or "Ошибка" in text:
             return
         start, end = cursor_pos, cursor_pos
-        while start > 0 and (text[start-1].isdigit() or text[start-1] in ".−"):
+        while start > 0 and (text[start - 1].isdigit() or text[start - 1] in ".−"):
             start -= 1
-        while end < len(text) and (text[end-1].isdigit() or text[end-1] in ".−"):
+        while end < len(text) and (text[end - 1].isdigit() or text[end - 1] in ".−"):
             end += 1
-        
+
         numb = text[start:end]
 
         if not numb or numb == "−":
             return
-        
+
         if numb.startswith("−"):
             new_numb = numb[1:]
         else:
             new_numb = "−" + numb
-        
+
         new_text = text[:start] + new_numb + text[end:]
         self.le_enter.setText(new_text)
         self.le_enter.setCursorPosition(start + len(new_numb))
@@ -926,32 +1190,52 @@ class MainWindow(QMainWindow):
         res, stack = [], []
         i = 0
         while i < len(s):
-            if s[i:i+4] in ["sin(", "cos(", "tan(", "ctg("]:
-                res.append(s[i:i+4])
-                stack.append(s[i:i+4])
+            if s[i : i + 4] in ["sin(", "cos(", "tan(", "ctg("]:
+                res.append(s[i : i + 4])
+                stack.append(s[i : i + 4])
                 i += 4
-            elif s[i:i+4] == "log(":
+            elif s[i : i + 4] == "log(":
                 res.append("log(")
                 stack.append("log(")
                 i += 4
-            elif s[i] =='(':
-                res.append('(')
-                stack.append('(')
+            elif s[i] == "(":
+                res.append("(")
+                stack.append("(")
                 i += 1
-            elif s[i] ==')':
-                if stack:
+            elif s[i] == ")":
+                if stack and stack[-1] in ["(", "sin(", "cos(", "tan(", "ctg(", "log("]:
                     stack.pop()
-                    res.append(')')
+                    res.append(")")
+                i += 1
+            elif s[i] == "|":
+                if not stack or stack[-1] != "|":
+                    res.append("|")
+                    stack.append("|")
+                else:
+                    stack.pop()
+                    res.append("|")
                 i += 1
             else:
                 res.append(s[i])
                 i += 1
-        
+
         while stack:
-            stack.pop()
-            res.append(')')
-        
-        return ''.join(res)
+            top = stack.pop()
+            res.append(
+                ")" if top in ["(", "sin(", "cos(", "tan(", "ctg(", "log("] else "|"
+            )
+
+        return "".join(res)
+
+    def move_cursor_l(self):
+        cursor_pos = self.le_enter.cursorPosition()
+        self.le_enter.setCursorPosition(max(0, cursor_pos - 1))
+
+    def move_cursor_r(self):
+        cursor_pos = self.le_enter.cursorPosition()
+        text = self.le_enter.text()
+        self.le_enter.setCursorPosition(min(len(text), cursor_pos + 1))
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
