@@ -10,13 +10,14 @@ from PySide6.QtWidgets import (
     QGridLayout, QSizePolicy,
     QSlider,QSpinBox, QAbstractSpinBox,
 )
+from torch import ge
 import resources  # noqa: F401
 from PySide6.QtGui import QIcon, QCursor, QAction, QKeySequence
 from PySide6.QtCore import QSize, Qt, QEvent
 from OOP1 import Shifrator
 from OOP2 import Transformator
 from OOP3 import Calculator
-
+from OOP4 import Characters, StrengthToEntropy, generate_password, get_entropy, CHARACTER_NUMBER, GENERATE_PASSWORD
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -113,6 +114,9 @@ class MainWindow(QMainWindow):
         self.btn_calc.clicked.connect(lambda: self.show_page(2, self.btn_calc))
         self.btn_pass.clicked.connect(lambda: self.show_page(3, self.btn_pass))
 
+    def copy(self, text):
+        QApplication.clipboard().setText(text)
+
     def show_page(self, page_index, active_button):
         self.stack.setCurrentIndex(page_index)
         buttons = [self.btn_shifr, self.btn_transf, self.btn_calc, self.btn_pass]
@@ -148,14 +152,29 @@ class MainWindow(QMainWindow):
         self.input_key.setPlaceholderText("Введите ключ")
         layout.addWidget(self.input_key)
 
+        layout_btns = QHBoxLayout()
         btn = QPushButton("Выполнить")
         btn.setFixedHeight(20)
         btn.setStyleSheet(
             """QPushButton {color: black; background-color: #63F113; border-radius: 2px; border: none; }
             QPushButton:hover { background-color: #309112; }"""
         )
+        btn_copy = QPushButton()
+        btn_copy.setStyleSheet('''
+            QPushButton {
+                border-radius: 5px;background-color: #888;
+                border: 2px solid gray;}
+            QPushButton:hover { border: 2px solid #333; }''')
+        icon = QIcon(":/icons/copy_black.svg")
+        btn_copy.setIcon(icon)
+        btn_copy.setFixedHeight(20)
+        policy = QSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
+        btn_copy.setSizePolicy(policy)
+        layout_btns.addWidget(btn)
+        layout_btns.addWidget(btn_copy)
         btn.clicked.connect(self.btn_shifr_click)
-        layout.addWidget(btn)
+        btn_copy.clicked.connect(lambda: self.copy(self.res_output.toPlainText()))
+        layout.addLayout(layout_btns)
 
         self.res_output = QTextEdit()
         self.res_output.setPlaceholderText("Результат")
@@ -201,7 +220,7 @@ class MainWindow(QMainWindow):
                 background-color: orange; width: 22px;
                 border-radius: 10px; margin-top: -8px;
                 margin-bottom: -8px;}""")
-        self.slider_length.setMaximum(500)
+        self.slider_length.setMaximum(200)
         self.slider_length.setValue(12)
         self.slider_length.setOrientation(Qt.Orientation.Horizontal)
 
@@ -209,10 +228,9 @@ class MainWindow(QMainWindow):
 
         self.cnt_length = QSpinBox(page)
         self.cnt_length.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        self.cnt_length.setStyleSheet("")
         self.cnt_length.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.cnt_length.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
-        self.cnt_length.setMaximum(999)
+        self.cnt_length.setMaximum(200)
 
         self.layout_length.addWidget(self.cnt_length)
 
@@ -225,6 +243,7 @@ class MainWindow(QMainWindow):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.label_diff.sizePolicy().hasHeightForWidth())
         self.label_diff.setSizePolicy(sizePolicy)
+        self.label_diff.setStyleSheet("font-size: 12pt; font-weight: 600;")
         self.label_diff.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.layout_info.addWidget(self.label_diff)
@@ -232,8 +251,8 @@ class MainWindow(QMainWindow):
         self.label_entropy = QLabel(page)
         sizePolicy.setHeightForWidth(self.label_entropy.sizePolicy().hasHeightForWidth())
         self.label_entropy.setSizePolicy(sizePolicy)
-        self.label_entropy.setMouseTracking(False)
         self.label_entropy.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.label_entropy.setStyleSheet("font-size: 12pt; font-weight: 600;")
 
         self.layout_info.addWidget(self.label_entropy)
 
@@ -286,6 +305,7 @@ class MainWindow(QMainWindow):
         self.btn_visibility.setIcon(icon)
         self.btn_visibility.setIconSize(QSize(35, 35))
         self.btn_visibility.setCheckable(True)
+        self.btn_visibility.clicked.connect(self.change_visibility)
 
         self.horizontalLayout.addWidget(self.btn_visibility)
 
@@ -343,7 +363,7 @@ class MainWindow(QMainWindow):
         self.cnt_lower.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.cnt_lower.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.cnt_lower.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
-        self.cnt_lower.setMaximum(999)
+        self.cnt_lower.setMaximum(200)
 
         self.layout_lower.addWidget(self.cnt_lower)
 
@@ -364,7 +384,7 @@ class MainWindow(QMainWindow):
         self.cnt_up.setFrame(True)
         self.cnt_up.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.cnt_up.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
-        self.cnt_up.setMaximum(999)
+        self.cnt_up.setMaximum(200)
 
         self.verticalLayout.addWidget(self.cnt_up)
 
@@ -416,8 +436,66 @@ class MainWindow(QMainWindow):
         self.layout_chars.addLayout(self.verticalLayout_9)
 
         self.gridLayout.addLayout(self.layout_chars, 4, 0, 1, 1)
-
+        self.connect_slider_to_spinbox()
+        for btn in GENERATE_PASSWORD:
+            getattr(self, btn).clicked.connect(self.set_password)
+        self.btn_copy.clicked.connect(lambda: self.copy(self.password.text()))
         self.stack.addWidget(page)
+
+    def connect_slider_to_spinbox(self):
+        self.slider_length.valueChanged.connect(self.cnt_length.setValue)
+        self.cnt_length.valueChanged.connect(self.slider_length.setValue)
+        self.cnt_length.valueChanged.connect(self.set_password)
+
+    def get_chars(self) -> str:
+        chars = ""
+
+        for btn in Characters:
+            if getattr(self, btn.name).isChecked():
+                chars += btn.value
+
+        return chars
+
+    def set_password(self) -> None:
+        try:
+            self.password.setText(
+            generate_password(
+                length=self.slider_length.value(),
+                chars = self.get_chars())
+        )
+        except IndexError:
+            self.password.clear()
+        self.set_entropy()
+        self.set_diff()
+
+    def set_diff(self) -> None:
+        length = len(self.password.text())
+        char_num = self.get_character_number()
+
+        for strength in StrengthToEntropy:
+            if get_entropy(length, char_num) >= strength.value:
+                self.label_diff.setText(f"Сложность: {strength.name}")
+
+    def change_visibility(self) -> None:
+        if self.btn_visibility.isChecked():
+            self.password.setEchoMode(QLineEdit.EchoMode.Normal)
+        else:
+            self.password.setEchoMode(QLineEdit.EchoMode.Password)
+
+    def get_character_number(self) -> int:
+        num = 0
+
+        for btn in CHARACTER_NUMBER.items():
+            if getattr(self, btn[0]).isChecked():
+                num += btn[1]
+        return num
+
+    def set_entropy(self) -> None:
+        length = len(self.password.text())
+        char_num = self.get_character_number()
+
+        self.label_entropy.setText(
+            f"Entropy: {get_entropy(length, char_num)} bit")
 
     def btn_shifr_click(self):
         stor = self.combo_deystv.currentText()
@@ -1000,6 +1078,7 @@ class MainWindow(QMainWindow):
         self.btn_left.clicked.connect(self.move_cursor_l)
 
         self.verticalLayout.addLayout(self.layout_btns)
+
         self.stack.addWidget(page)
 
     def calculate(self):
