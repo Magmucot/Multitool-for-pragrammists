@@ -800,7 +800,7 @@ class MainWindow(QMainWindow):
                 i += 1
 
 
-        if open_paren > 0 and (p_char.isdigit() or p_char in ["e", "π", "Ans"]) and value not in [")"] + ["+", "−", "×", "÷", "//", "%"]:
+        if open_paren > 0 and (p_char.isdigit() or p_char in ["e", "π", "Ans"]) and not is_number and value not in [")"] + ["+", "−", "×", "÷", "//", "%"]:
             text = text[:cursor_pos] + ")" + text[cursor_pos:]
             cursor_pos += 1
             n_char = ")"
