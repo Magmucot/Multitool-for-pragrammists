@@ -10,7 +10,6 @@ from PySide6.QtWidgets import (
     QGridLayout, QSizePolicy,
     QSlider,QSpinBox, QAbstractSpinBox,
 )
-from torch import ge
 import resources  # noqa: F401
 from PySide6.QtGui import QIcon, QCursor, QAction, QKeySequence
 from PySide6.QtCore import QSize, Qt, QEvent
