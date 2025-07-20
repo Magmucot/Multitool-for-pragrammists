@@ -1210,9 +1210,10 @@ class MainWindow(QMainWindow):
         self.le_enter.setText("0")
 
     def backspace(self):
-        current = self.le_enter.text()
-        if current != "Ошибка" and len(current) > 1:
-            self.le_enter.setText(current[:-1])
+        curr = self.le_enter.text()
+        position = self.le_enter.cursorPosition()
+        if curr != "Ошибка" and len(curr) > 1:
+            self.le_enter.setText(curr[:position - 1] + curr[position:])
         else:
             self.le_enter.setText("0")
 
