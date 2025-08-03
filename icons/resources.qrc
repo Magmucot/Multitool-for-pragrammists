@@ -1,0 +1,22 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+    <qresource prefix="/icons">
+        <file>icon.png</file>
+        <file>fingerprint.png</file>
+        <file>binary.png</file>
+        <file>calculate.png</file>
+        <file>backspace.png</file>
+        <file>backspace_black.png</file>
+        <file>copy_black.svg</file>
+        <file>copy_white.svg</file>
+        <file>lock_black.svg</file>
+        <file>lock_white.svg</file>
+        <file>refresh_black.svg</file>
+        <file>refresh_white.svg</file>
+        <file>visibility_black.svg</file>
+        <file>visibility_white.svg</file>
+        <file>visibility_off_black.svg</file>
+        <file>visibility_off_white.svg</file>
+        <file>vpnkey_black.png</file>
+    </qresource>
+</RCC>
