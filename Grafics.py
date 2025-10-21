@@ -130,6 +130,8 @@ class MainWindow(QMainWindow):
         self.btn_transf.clicked.connect(lambda: self.show_page(1, self.btn_transf))
         self.btn_calc.clicked.connect(lambda: self.show_page(2, self.btn_calc))
         self.btn_pass.clicked.connect(lambda: self.show_page(3, self.btn_pass))
+        self.show_page(2, self.btn_calc)
+
 
     def copy(self, text):
         QApplication.clipboard().setText(text)
@@ -1041,7 +1043,7 @@ class MainWindow(QMainWindow):
         self.btn_sign = QPushButton(page)
         self.btn_sign.setSizePolicy(sp)
         self.btn_sign.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        self.btn_sign.setText("+/−")
+        self.btn_sign.setText("±")
         self.layout_btns.addWidget(self.btn_sign, 6, 0)
 
         self.btn_point = QPushButton(page)
